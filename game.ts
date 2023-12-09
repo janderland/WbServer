@@ -3,6 +3,7 @@ import { Deserialize, Message, Serialize, Type } from "./message.ts";
 const winCount = 50;
 
 enum State {
+  INITIAL,
   NAMING,
   COUNTING,
   GAMING,
@@ -27,7 +28,7 @@ class Player {
 }
 
 export class Game {
-  private state = State.NAMING;
+  private state = State.INITIAL;
   private readonly intervalID = { counting: 0, gaming: 0 };
   private readonly players = [new Player(), new Player()] as const;
   private count = 5;
@@ -41,8 +42,7 @@ export class Game {
       conn2.addEventListener("message", this.listener(1));
     }
 
-    this.broadcast({ type: Type.WINCOUNT, count: winCount });
-    this.broadcast({ type: Type.NAMEPLEASE });
+    this.update(State.INITIAL);
   }
 
   private send(i: 0 | 1, msg: Message) {
@@ -68,6 +68,26 @@ export class Game {
   // a new State.
   private update(event: [0 | 1, Message] | State) {
     switch (this.state) {
+      case State.INITIAL: {
+        // During State.INITIAL, we don't expect any messages.
+        if (typeof event !== "number") {
+          this.logIgnoredMsg(event);
+          break;
+        }
+
+        // If event is a state change, we can only change
+        // state from State.INITIAL to State.NAMING.
+        if (event !== State.NAMING) {
+          this.throwBadState(event);
+        }
+
+        // Send the win count to each player and ask for their names.
+        this.broadcast({ type: Type.WINCOUNT, count: winCount });
+        this.broadcast({ type: Type.NAMEPLEASE });
+        this.update(State.NAMING);
+        break;
+      }
+
       case State.NAMING: {
         if (typeof event !== "number") {
           // If the event is a message, we only accept Type.NAME.
