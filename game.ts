@@ -1,4 +1,4 @@
-import { Deserialize, Message, Serialize, Type } from "./message.ts";
+import { Deserialize, Message, MsgType, Serialize } from "./message.ts";
 
 const winCount = 50;
 
@@ -82,8 +82,8 @@ export class Game {
         }
 
         // Send the win count to each player and ask for their names.
-        this.broadcast({ type: Type.WINCOUNT, count: winCount });
-        this.broadcast({ type: Type.NAMEPLEASE });
+        this.broadcast({ type: MsgType.WINCOUNT, count: winCount });
+        this.broadcast({ type: MsgType.NAMEPLEASE });
         this.update(State.NAMING);
         break;
       }
@@ -92,7 +92,7 @@ export class Game {
         if (typeof event !== "number") {
           // If the event is a message, we only accept Type.NAME.
           const [i, msg] = event;
-          if (msg.type !== Type.NAME) {
+          if (msg.type !== MsgType.NAME) {
             this.logIgnoredMsg(event);
             break;
           }
@@ -113,11 +113,11 @@ export class Game {
 
         // Send the opponent's name to each player.
         this.send(0, {
-          type: Type.MATCHED,
+          type: MsgType.MATCHED,
           opponentName: this.players[1].name,
         });
         this.send(1, {
-          type: Type.MATCHED,
+          type: MsgType.MATCHED,
           opponentName: this.players[0].name,
         });
 
@@ -125,7 +125,7 @@ export class Game {
         this.intervalID.counting = setInterval(() => {
           if (this.count > 0) {
             this.broadcast({
-              type: Type.COUNTDOWN,
+              type: MsgType.COUNTDOWN,
               value: this.count,
             });
             this.count--;
@@ -155,12 +155,12 @@ export class Game {
         // Starting sending both players' scores every 300ms.
         this.intervalID.gaming = setInterval(() => {
           this.send(0, {
-            type: Type.CLICKCOUNT,
+            type: MsgType.CLICKCOUNT,
             yourCount: this.players[0].points,
             theirCount: this.players[1].points,
           });
           this.send(1, {
-            type: Type.CLICKCOUNT,
+            type: MsgType.CLICKCOUNT,
             yourCount: this.players[1].points,
             theirCount: this.players[0].points,
           });
@@ -172,7 +172,7 @@ export class Game {
         if (typeof event !== "number") {
           // When the event is a message, we only accept Type.CLICK.
           const [i, msg] = event;
-          if (msg.type !== Type.CLICK) {
+          if (msg.type !== MsgType.CLICK) {
             this.logIgnoredMsg(event);
             break;
           }
@@ -188,8 +188,8 @@ export class Game {
 
         // Stop sending scores and send the game over message.
         clearInterval(this.intervalID.gaming);
-        this.send(0, { type: Type.GAMEOVER, won: true });
-        this.send(1, { type: Type.GAMEOVER, won: false });
+        this.send(0, { type: MsgType.GAMEOVER, won: true });
+        this.send(1, { type: MsgType.GAMEOVER, won: false });
         break;
       }
 
