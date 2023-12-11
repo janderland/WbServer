@@ -1,17 +1,10 @@
 import { Deserialize, Message, MsgType, Serialize } from "./message.ts";
 
 const winCount = 50;
-
-enum State {
-  INITIAL,
-  NAMING,
-  COUNTING,
-  GAMING,
-  DONE,
-}
+const countDown = 5;
 
 // Specify the parts of a Deno's Websocket which
-// Game will actually use. This allows us to easily
+// are actually used. This allows us to easily
 // mock the Websocket during testing.
 interface Websocket {
   send(msg: string): void;
@@ -21,37 +14,168 @@ interface Websocket {
   ): void;
 }
 
-class Player {
-  name = "";
-  points = 0;
-  conn: Websocket = { send: () => {}, addEventListener: () => {} };
+// Null-object pattern for Websocket.
+class NullWebsocket implements Websocket {
+  send(_msg: string): void {}
+  addEventListener(
+    _type: string,
+    _listener: (event: { data: string }) => void,
+  ): void {}
+}
+
+// The game is defined as a state machine. Each state
+// is modeled as a class which implements this interface.
+// Each state follows RAII principles. It's constructor
+// sends intial messages and sets up any timers. The
+// update method handles received messages and cancels
+// said timers before returning a new state.
+interface State {
+  update(event: [0 | 1, Message]): State;
+}
+
+class Naming implements State {
+  constructor(
+    private readonly game: Game,
+    private readonly name: [string, string] = ["", ""],
+  ) {
+    this.game.broadcast({ type: MsgType.WINCOUNT, count: winCount });
+    this.game.broadcast({ type: MsgType.NAMEPLEASE });
+  }
+
+  update(event: [0 | 1, Message]): State {
+    const [i, msg] = event;
+    if (msg.type !== MsgType.NAME) {
+      logIgnoredMsg("naming", event);
+      return this;
+    }
+
+    this.name[i] = msg.name;
+    if (!this.name.every((p) => p !== "")) {
+      return this;
+    }
+
+    this.game.send(0, {
+      type: MsgType.MATCHED,
+      opponentName: this.name[1],
+    });
+    this.game.send(1, {
+      type: MsgType.MATCHED,
+      opponentName: this.name[0],
+    });
+
+    return new Counting(this.game);
+  }
+}
+
+class Counting implements State {
+  private readonly intervalID: number;
+
+  constructor(
+    private readonly game: Game,
+    private count: number = countDown,
+  ) {
+    // Start the count down. When we
+    // reach 0, switch to State.GAMING.
+    this.intervalID = setInterval(() => {
+      if (this.count > 0) {
+        this.game.broadcast({
+          type: MsgType.COUNTDOWN,
+          value: this.count,
+        });
+        this.count--;
+      } else {
+        clearInterval(this.intervalID);
+        this.game.update(new Gaming(this.game));
+      }
+    }, 1000);
+  }
+
+  update(event: [0 | 1, Message]): State {
+    logIgnoredMsg("counting", event);
+    return this;
+  }
+}
+
+class Gaming implements State {
+  private readonly intervalID: number;
+
+  constructor(
+    private readonly game: Game,
+    private readonly score: [number, number] = [0, 0],
+  ) {
+    // Send score to each player every 300ms.
+    this.intervalID = setInterval(() => {
+      this.game.send(0, {
+        type: MsgType.CLICKCOUNT,
+        yourCount: this.score[0],
+        theirCount: this.score[1],
+      });
+      this.game.send(1, {
+        type: MsgType.CLICKCOUNT,
+        yourCount: this.score[1],
+        theirCount: this.score[0],
+      });
+    }, 300);
+  }
+
+  update(event: [0 | 1, Message]): State {
+    const [i, msg] = event;
+    if (msg.type !== MsgType.CLICK) {
+      logIgnoredMsg("gaming", event);
+      return this;
+    }
+
+    // Update the player's score and check if they won.
+    this.score[i]++;
+    if (this.score[i] < winCount) {
+      return this;
+    }
+
+    // Stop sending scores and send the game over message.
+    clearInterval(this.intervalID);
+    this.game.send(0, { type: MsgType.GAMEOVER, won: true });
+    this.game.send(1, { type: MsgType.GAMEOVER, won: false });
+
+    return new Done(this.game);
+  }
+}
+
+class Done implements State {
+  constructor(private readonly game: Game) {}
+
+  update(event: [0 | 1, Message]): State {
+    logIgnoredMsg("done", event);
+    return this;
+  }
 }
 
 export class Game {
-  private state = State.INITIAL;
-  private readonly intervalID = { counting: 0, gaming: 0 };
-  private readonly players = [new Player(), new Player()] as const;
-  private count = 5;
+  private state: State;
 
-  constructor(conn1: Websocket, conn2?: Websocket) {
-    this.players[0].conn = conn1;
+  private readonly players: [Websocket, Websocket] = [
+    new NullWebsocket(),
+    new NullWebsocket(),
+  ];
+
+  constructor(
+    conn1: Websocket = new NullWebsocket(),
+    conn2: Websocket = new NullWebsocket(),
+    state: (game: Game) => State = (game) => new Naming(game),
+  ) {
+    this.players[0] = conn1;
+    this.players[1] = conn2;
     conn1.addEventListener("message", this.listener(0));
-
-    if (conn2) {
-      this.players[1].conn = conn2;
-      conn2.addEventListener("message", this.listener(1));
-    }
-
-    this.update(State.INITIAL);
+    conn2.addEventListener("message", this.listener(1));
+    this.state = state(this);
   }
 
-  private send(i: 0 | 1, msg: Message) {
-    this.players[i].conn.send(Serialize(msg));
+  send(i: 0 | 1, msg: Message) {
+    this.players[i].send(Serialize(msg));
   }
 
-  private broadcast(msg: Message) {
+  broadcast(msg: Message) {
     for (const player of this.players) {
-      player.conn.send(Serialize(msg));
+      player.send(Serialize(msg));
     }
   }
 
@@ -62,156 +186,17 @@ export class Game {
     };
   }
 
-  // After construction, all state changes are performed
-  // by update(). The caller can either pass a tuple of
-  // the player index and a Message from said player, or
-  // a new State.
-  private update(event: [0 | 1, Message] | State) {
-    switch (this.state) {
-      case State.INITIAL: {
-        // During State.INITIAL, we don't expect any messages.
-        if (typeof event !== "number") {
-          this.logIgnoredMsg(event);
-          break;
-        }
-
-        // If event is a state change, we can only change
-        // state from State.INITIAL to State.NAMING.
-        if (event !== State.NAMING) {
-          this.throwBadState(event);
-        }
-
-        // Send the win count to each player and ask for their names.
-        this.broadcast({ type: MsgType.WINCOUNT, count: winCount });
-        this.broadcast({ type: MsgType.NAMEPLEASE });
-        this.update(State.NAMING);
-        break;
-      }
-
-      case State.NAMING: {
-        if (typeof event !== "number") {
-          // If the event is a message, we only accept Type.NAME.
-          const [i, msg] = event;
-          if (msg.type !== MsgType.NAME) {
-            this.logIgnoredMsg(event);
-            break;
-          }
-          this.players[i].name = msg.name;
-          if (this.players.every((p) => p.name)) {
-            this.update(State.COUNTING);
-          }
-          break;
-        }
-
-        // If the event is a state change, we can only change
-        // state from State.NAMING to State.COUNTING.
-        if (event !== State.COUNTING) {
-          this.throwBadState(event);
-        }
-
-        this.state = event;
-
-        // Send the opponent's name to each player.
-        this.send(0, {
-          type: MsgType.MATCHED,
-          opponentName: this.players[1].name,
-        });
-        this.send(1, {
-          type: MsgType.MATCHED,
-          opponentName: this.players[0].name,
-        });
-
-        // Start the count down. When we reach 0, switch to State.GAMING.
-        this.intervalID.counting = setInterval(() => {
-          if (this.count > 0) {
-            this.broadcast({
-              type: MsgType.COUNTDOWN,
-              value: this.count,
-            });
-            this.count--;
-          } else {
-            clearInterval(this.intervalID.counting);
-            this.update(State.GAMING);
-          }
-        }, 1000);
-        break;
-      }
-
-      case State.COUNTING: {
-        // During State.COUNTING, we don't expect any messages.
-        if (typeof event !== "number") {
-          this.logIgnoredMsg(event);
-          break;
-        }
-
-        // When the event is a state change, we can only change
-        // state from State.COUNTING to State.GAMING.
-        if (event !== State.GAMING) {
-          this.throwBadState(event);
-        }
-
-        this.state = event;
-
-        // Starting sending both players' scores every 300ms.
-        this.intervalID.gaming = setInterval(() => {
-          this.send(0, {
-            type: MsgType.CLICKCOUNT,
-            yourCount: this.players[0].points,
-            theirCount: this.players[1].points,
-          });
-          this.send(1, {
-            type: MsgType.CLICKCOUNT,
-            yourCount: this.players[1].points,
-            theirCount: this.players[0].points,
-          });
-        }, 300);
-        break;
-      }
-
-      case State.GAMING: {
-        if (typeof event !== "number") {
-          // When the event is a message, we only accept Type.CLICK.
-          const [i, msg] = event;
-          if (msg.type !== MsgType.CLICK) {
-            this.logIgnoredMsg(event);
-            break;
-          }
-
-          // Update the player's score and check if they won.
-          this.players[i].points++;
-          if (this.players[i].points < winCount) {
-            break;
-          }
-        }
-
-        this.state = State.DONE;
-
-        // Stop sending scores and send the game over message.
-        clearInterval(this.intervalID.gaming);
-        this.send(0, { type: MsgType.GAMEOVER, won: true });
-        this.send(1, { type: MsgType.GAMEOVER, won: false });
-        break;
-      }
-
-      case State.DONE:
-        // We shouldn't perform any updates during State.DONE.
-        if (typeof event !== "number") {
-          this.logIgnoredMsg(event);
-          break;
-        }
-        this.throwBadState(event);
+  update(event: [0 | 1, Message] | State) {
+    if (event instanceof Array) {
+      this.state = this.state.update(event);
+      return;
     }
+    this.state = event;
   }
+}
 
-  private logIgnoredMsg(event: [0 | 1, Message]) {
-    console.log(
-      `ignoring message ${event[0]} ${
-        Serialize(event[1])
-      } during state ${this.state}`,
-    );
-  }
-
-  private throwBadState(state: State) {
-    throw new Error(`bad state change ${State[this.state]} to ${State[state]}`);
-  }
+function logIgnoredMsg(state: string, event: [0 | 1, Message]) {
+  console.log(
+    `ignoring message ${event[0]} ${Serialize(event[1])} during state ${state}`,
+  );
 }
