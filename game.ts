@@ -6,7 +6,7 @@ const countDown = 5;
 // Specify the parts of a Deno's Websocket which
 // are actually used. This allows us to easily
 // mock the Websocket during testing.
-interface Websocket {
+export interface Websocket {
   send(msg: string): void;
   addEventListener(
     type: string,
@@ -30,6 +30,7 @@ class NullWebsocket implements Websocket {
 // update method handles received messages and cancels
 // said timers before returning a new state.
 interface State {
+  stop(): void;
   update(event: [0 | 1, Message]): State;
 }
 
@@ -41,6 +42,8 @@ class Naming implements State {
     this.game.broadcast({ type: MsgType.WINCOUNT, count: winCount });
     this.game.broadcast({ type: MsgType.NAMEPLEASE });
   }
+
+  stop(): void {}
 
   update(event: [0 | 1, Message]): State {
     const [i, msg] = event;
@@ -90,6 +93,10 @@ class Counting implements State {
     }, 1000);
   }
 
+  stop(): void {
+    clearInterval(this.intervalID);
+  }
+
   update(event: [0 | 1, Message]): State {
     logIgnoredMsg("counting", event);
     return this;
@@ -118,6 +125,10 @@ class Gaming implements State {
     }, 300);
   }
 
+  stop(): void {
+    clearInterval(this.intervalID);
+  }
+
   update(event: [0 | 1, Message]): State {
     const [i, msg] = event;
     if (msg.type !== MsgType.CLICK) {
@@ -143,6 +154,8 @@ class Gaming implements State {
 class Done implements State {
   constructor(private readonly game: Game) {}
 
+  stop(): void {}
+
   update(event: [0 | 1, Message]): State {
     logIgnoredMsg("done", event);
     return this;
@@ -167,6 +180,10 @@ export class Game {
     conn1.addEventListener("message", this.listener(0));
     conn2.addEventListener("message", this.listener(1));
     this.state = state(this);
+  }
+
+  stop() {
+    this.state.stop();
   }
 
   send(i: 0 | 1, msg: Message) {
