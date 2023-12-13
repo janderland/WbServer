@@ -3,9 +3,10 @@ import { Deserialize, Message, MsgType, Serialize } from "./message.ts";
 const winCount = 50;
 const countDown = 5;
 
-// Specify the parts of a Deno's Websocket which
-// are actually used. This allows us to easily
-// mock the Websocket during testing.
+type PlayerID = 0 | 1;
+
+// Specify the parts of a Deno's Websocket which are actually used.
+// This allows us to easily mock the Websocket during testing.
 export interface Websocket {
   send(msg: string): void;
   addEventListener(
@@ -14,7 +15,7 @@ export interface Websocket {
   ): void;
 }
 
-// Null-object pattern for Websocket.
+// Null-object pattern for our Websocket interface.
 class NullWebsocket implements Websocket {
   send(_msg: string): void {}
   addEventListener(
@@ -23,17 +24,18 @@ class NullWebsocket implements Websocket {
   ): void {}
 }
 
-// The game is defined as a state machine. Each state
-// is modeled as a class which implements this interface.
-// Each state follows RAII principles. It's constructor
-// sends intial messages and sets up any timers. The
-// update method handles received messages and cancels
-// said timers before returning a new state.
+// The game is defined as a state machine, each state being a class
+// implementing this interface. These classes follows RAII principles:
+// the constructor may set up intervals and the stop method clears
+// them. The update function handles any messages received during
+// the state's lifetime.
 export interface State {
   stop(): void;
-  update(event: [0 | 1, Message]): State;
+  update(event: [PlayerID, Message]): State;
 }
 
+// During the naming state, the game asks each player for their name.
+// When both names are received, the game switches to the counting state.
 export class Naming implements State {
   constructor(
     private readonly game: Game,
@@ -45,7 +47,7 @@ export class Naming implements State {
 
   stop(): void {}
 
-  update(event: [0 | 1, Message]): State {
+  update(event: [PlayerID, Message]): State {
     const [i, msg] = event;
     if (msg.type !== MsgType.NAME) {
       logIgnoredMsg("naming", event);
@@ -70,6 +72,8 @@ export class Naming implements State {
   }
 }
 
+// During the counting state, the game counts down from 5 to 0,
+// after which the game switches to the gaming state.
 export class Counting implements State {
   private readonly intervalID: number;
 
@@ -97,12 +101,16 @@ export class Counting implements State {
     clearInterval(this.intervalID);
   }
 
-  update(event: [0 | 1, Message]): State {
+  update(event: [PlayerID, Message]): State {
     logIgnoredMsg("counting", event);
     return this;
   }
 }
 
+// During the gaming state, the players send click events to the
+// game. Periodically, the game sends the current scores to the
+// players. When one of the players reaches the win count, the
+// game switches to the done state.
 export class Gaming implements State {
   private readonly intervalID: number;
 
@@ -129,7 +137,7 @@ export class Gaming implements State {
     clearInterval(this.intervalID);
   }
 
-  update(event: [0 | 1, Message]): State {
+  update(event: [PlayerID, Message]): State {
     const [i, msg] = event;
     if (msg.type !== MsgType.CLICK) {
       logIgnoredMsg("gaming", event);
@@ -151,12 +159,13 @@ export class Gaming implements State {
   }
 }
 
+// During the done state, the game ignores any messages received.
 export class Done implements State {
   constructor(private readonly game: Game) {}
 
   stop(): void {}
 
-  update(event: [0 | 1, Message]): State {
+  update(event: [PlayerID, Message]): State {
     logIgnoredMsg("done", event);
     return this;
   }
@@ -171,14 +180,19 @@ export class Game {
   ];
 
   constructor(
-    conn1: Websocket = new NullWebsocket(),
-    conn2: Websocket = new NullWebsocket(),
+    p1: Websocket = new NullWebsocket(),
+    p2: Websocket = new NullWebsocket(),
     state: (game: Game) => State = (game) => new Naming(game),
   ) {
-    this.players[0] = conn1;
-    this.players[1] = conn2;
-    conn1.addEventListener("message", this.listener(0));
-    conn2.addEventListener("message", this.listener(1));
+    this.players[0] = p1;
+    this.players[1] = p2;
+    p1.addEventListener("message", this.listener(0));
+    p2.addEventListener("message", this.listener(1));
+
+    // Initializing the state with this callback allows tests
+    // to start a game in any state. Some states send messages
+    // during their constructor, so the game must be fully
+    // setup before calling the callback.
     this.state = state(this);
   }
 
@@ -190,7 +204,7 @@ export class Game {
     this.state.stop();
   }
 
-  send(i: 0 | 1, msg: Message) {
+  send(i: PlayerID, msg: Message) {
     this.players[i].send(Serialize(msg));
   }
 
@@ -200,14 +214,14 @@ export class Game {
     }
   }
 
-  private listener(i: 0 | 1) {
+  private listener(i: PlayerID) {
     return (event: { data: string }) => {
       const msg = Deserialize(event.data);
       this.update([i, msg]);
     };
   }
 
-  update(event: [0 | 1, Message] | State) {
+  update(event: [PlayerID, Message] | State) {
     if (event instanceof Array) {
       this.state = this.state.update(event);
       return;
@@ -216,7 +230,7 @@ export class Game {
   }
 }
 
-function logIgnoredMsg(state: string, event: [0 | 1, Message]) {
+function logIgnoredMsg(state: string, event: [PlayerID, Message]) {
   console.log(
     `ignoring message ${event[0]} ${Serialize(event[1])} during state ${state}`,
   );
