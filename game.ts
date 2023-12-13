@@ -29,12 +29,12 @@ class NullWebsocket implements Websocket {
 // sends intial messages and sets up any timers. The
 // update method handles received messages and cancels
 // said timers before returning a new state.
-interface State {
+export interface State {
   stop(): void;
   update(event: [0 | 1, Message]): State;
 }
 
-class Naming implements State {
+export class Naming implements State {
   constructor(
     private readonly game: Game,
     private readonly name: [string, string] = ["", ""],
@@ -70,7 +70,7 @@ class Naming implements State {
   }
 }
 
-class Counting implements State {
+export class Counting implements State {
   private readonly intervalID: number;
 
   constructor(
@@ -80,13 +80,13 @@ class Counting implements State {
     // Start the count down. When we
     // reach 0, switch to State.GAMING.
     this.intervalID = setInterval(() => {
-      if (this.count > 0) {
-        this.game.broadcast({
-          type: MsgType.COUNTDOWN,
-          value: this.count,
-        });
-        this.count--;
-      } else {
+      this.game.broadcast({
+        type: MsgType.COUNTDOWN,
+        value: this.count,
+      });
+
+      this.count--;
+      if (this.count < 0) {
         clearInterval(this.intervalID);
         this.game.update(new Gaming(this.game));
       }
@@ -103,7 +103,7 @@ class Counting implements State {
   }
 }
 
-class Gaming implements State {
+export class Gaming implements State {
   private readonly intervalID: number;
 
   constructor(
@@ -144,14 +144,14 @@ class Gaming implements State {
 
     // Stop sending scores and send the game over message.
     clearInterval(this.intervalID);
-    this.game.send(0, { type: MsgType.GAMEOVER, won: true });
-    this.game.send(1, { type: MsgType.GAMEOVER, won: false });
+    this.game.send(i, { type: MsgType.GAMEOVER, won: true });
+    this.game.send(i ? 0 : 1, { type: MsgType.GAMEOVER, won: false });
 
     return new Done(this.game);
   }
 }
 
-class Done implements State {
+export class Done implements State {
   constructor(private readonly game: Game) {}
 
   stop(): void {}
@@ -180,6 +180,10 @@ export class Game {
     conn1.addEventListener("message", this.listener(0));
     conn2.addEventListener("message", this.listener(1));
     this.state = state(this);
+  }
+
+  current(): State {
+    return this.state;
   }
 
   stop() {
