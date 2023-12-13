@@ -105,14 +105,27 @@ Deno.test("game", async (t) => {
         theirCount: 1,
       });
 
-      for (let i = 0; i < 50; i++) {
+      p2.sendMsgToServer({ type: MsgType.CLICK });
+      tm.tick(300);
+      p1.assertMsgForPlayer(2, {
+        type: MsgType.CLICKCOUNT,
+        yourCount: 1,
+        theirCount: 1,
+      });
+      p2.assertMsgForPlayer(2, {
+        type: MsgType.CLICKCOUNT,
+        yourCount: 1,
+        theirCount: 1,
+      });
+
+      for (let i = 0; i < 49; i++) {
         p2.sendMsgToServer({ type: MsgType.CLICK });
       }
-      p1.assertMsgForPlayer(2, {
+      p1.assertMsgForPlayer(3, {
         type: MsgType.GAMEOVER,
         won: false,
       });
-      p2.assertMsgForPlayer(2, {
+      p2.assertMsgForPlayer(3, {
         type: MsgType.GAMEOVER,
         won: true,
       });
