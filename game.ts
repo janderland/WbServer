@@ -205,6 +205,7 @@ export class Game {
   }
 
   send(i: PlayerID, msg: Message) {
+    console.log(`sending message ${i} ${Serialize(msg)}`);
     this.players[i].send(Serialize(msg));
   }
 
@@ -216,6 +217,7 @@ export class Game {
 
   private listener(i: PlayerID) {
     return (event: { data: string }) => {
+      console.log(`received message ${i} ${event.data}`);
       const msg = Deserialize(event.data);
       this.update([i, msg]);
     };
