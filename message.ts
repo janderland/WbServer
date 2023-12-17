@@ -1,5 +1,4 @@
 export enum MsgType {
-  WINCOUNT,
   MATCHED,
   COUNTDOWN,
   CLICK,
@@ -7,44 +6,45 @@ export enum MsgType {
   NAME,
   NAMEPLEASE,
   CLICKCOUNT,
+  WINCOUNT,
 }
 
 export type WinCount = {
-  type: MsgType.WINCOUNT;
+  id: MsgType.WINCOUNT;
   count: number;
 };
 
 export type NamePlease = {
-  type: MsgType.NAMEPLEASE;
+  id: MsgType.NAMEPLEASE;
 };
 
 export type Name = {
-  type: MsgType.NAME;
+  id: MsgType.NAME;
   name: string;
 };
 
 export type Matched = {
-  type: MsgType.MATCHED;
+  id: MsgType.MATCHED;
   opponentName: string;
 };
 
 export type CountDown = {
-  type: MsgType.COUNTDOWN;
+  id: MsgType.COUNTDOWN;
   value: number;
 };
 
 export type Click = {
-  type: MsgType.CLICK;
+  id: MsgType.CLICK;
 };
 
 export type ClickCount = {
-  type: MsgType.CLICKCOUNT;
+  id: MsgType.CLICKCOUNT;
   yourCount: number;
   theirCount: number;
 };
 
 export type GameOver = {
-  type: MsgType.GAMEOVER;
+  id: MsgType.GAMEOVER;
   won: boolean;
 };
 
@@ -64,7 +64,7 @@ export function Serialize(msg: Message): string {
 
 export function Deserialize(json: string): Message {
   const obj = JSON.parse(json);
-  switch (obj.type) {
+  switch (obj.id) {
     case MsgType.NAMEPLEASE:
       return obj as NamePlease;
 
@@ -111,6 +111,6 @@ export function Deserialize(json: string): Message {
       return obj as WinCount;
 
     default:
-      throw new Error(`Unknown type ${obj.type}`);
+      throw new Error(`Unknown type ${obj.id}`);
   }
 }

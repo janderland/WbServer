@@ -6,18 +6,18 @@ import { Deserialize, Message, MsgType, Serialize } from "./message.ts";
 
 Deno.test("round trip", async (t) => {
   const messages: Message[] = [
-    { type: MsgType.WINCOUNT, count: 13 },
-    { type: MsgType.NAMEPLEASE },
-    { type: MsgType.NAME, name: "foo" },
-    { type: MsgType.MATCHED, opponentName: "bar" },
-    { type: MsgType.COUNTDOWN, value: 5 },
-    { type: MsgType.CLICK },
-    { type: MsgType.CLICKCOUNT, yourCount: 31, theirCount: 29 },
-    { type: MsgType.GAMEOVER, won: true },
+    { id: MsgType.WINCOUNT, count: 13 },
+    { id: MsgType.NAMEPLEASE },
+    { id: MsgType.NAME, name: "foo" },
+    { id: MsgType.MATCHED, opponentName: "bar" },
+    { id: MsgType.COUNTDOWN, value: 5 },
+    { id: MsgType.CLICK },
+    { id: MsgType.CLICKCOUNT, yourCount: 31, theirCount: 29 },
+    { id: MsgType.GAMEOVER, won: true },
   ];
 
   for (const msg of messages) {
-    await t.step(MsgType[msg.type], () => {
+    await t.step(MsgType[msg.id], () => {
       assertEquals(Deserialize(Serialize(msg)), msg);
     });
   }

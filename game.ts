@@ -41,15 +41,15 @@ export class Naming implements State {
     private readonly game: Game,
     private readonly name: [string, string] = ["", ""],
   ) {
-    this.game.broadcast({ type: MsgType.WINCOUNT, count: winCount });
-    this.game.broadcast({ type: MsgType.NAMEPLEASE });
+    this.game.broadcast({ id: MsgType.WINCOUNT, count: winCount });
+    this.game.broadcast({ id: MsgType.NAMEPLEASE });
   }
 
   stop(): void {}
 
   update(event: [PlayerID, Message]): State {
     const [i, msg] = event;
-    if (msg.type !== MsgType.NAME) {
+    if (msg.id !== MsgType.NAME) {
       logIgnoredMsg("naming", event);
       return this;
     }
@@ -60,11 +60,11 @@ export class Naming implements State {
     }
 
     this.game.send(0, {
-      type: MsgType.MATCHED,
+      id: MsgType.MATCHED,
       opponentName: this.name[1],
     });
     this.game.send(1, {
-      type: MsgType.MATCHED,
+      id: MsgType.MATCHED,
       opponentName: this.name[0],
     });
 
@@ -85,7 +85,7 @@ export class Counting implements State {
     // reach 0, switch to State.GAMING.
     this.intervalID = setInterval(() => {
       this.game.broadcast({
-        type: MsgType.COUNTDOWN,
+        id: MsgType.COUNTDOWN,
         value: this.count,
       });
 
@@ -121,12 +121,12 @@ export class Gaming implements State {
     // Send score to each player every 300ms.
     this.intervalID = setInterval(() => {
       this.game.send(0, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: this.score[0],
         theirCount: this.score[1],
       });
       this.game.send(1, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: this.score[1],
         theirCount: this.score[0],
       });
@@ -139,7 +139,7 @@ export class Gaming implements State {
 
   update(event: [PlayerID, Message]): State {
     const [i, msg] = event;
-    if (msg.type !== MsgType.CLICK) {
+    if (msg.id !== MsgType.CLICK) {
       logIgnoredMsg("gaming", event);
       return this;
     }
@@ -152,8 +152,8 @@ export class Gaming implements State {
 
     // Stop sending scores and send the game over message.
     clearInterval(this.intervalID);
-    this.game.send(i, { type: MsgType.GAMEOVER, won: true });
-    this.game.send(i ? 0 : 1, { type: MsgType.GAMEOVER, won: false });
+    this.game.send(i, { id: MsgType.GAMEOVER, won: true });
+    this.game.send(i ? 0 : 1, { id: MsgType.GAMEOVER, won: false });
 
     return new Done(this.game);
   }

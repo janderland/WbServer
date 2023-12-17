@@ -50,17 +50,17 @@ function env(
 Deno.test("game", async (t) => {
   await t.step("naming", () => {
     env((g: Game) => new Naming(g), (_tm, g, p1, p2) => {
-      p1.assertMsgForPlayer(0, { type: MsgType.WINCOUNT, count: 50 });
-      p1.assertMsgForPlayer(1, { type: MsgType.NAMEPLEASE });
+      p1.assertMsgForPlayer(0, { id: MsgType.WINCOUNT, count: 50 });
+      p1.assertMsgForPlayer(1, { id: MsgType.NAMEPLEASE });
 
-      p2.assertMsgForPlayer(0, { type: MsgType.WINCOUNT, count: 50 });
-      p2.assertMsgForPlayer(1, { type: MsgType.NAMEPLEASE });
+      p2.assertMsgForPlayer(0, { id: MsgType.WINCOUNT, count: 50 });
+      p2.assertMsgForPlayer(1, { id: MsgType.NAMEPLEASE });
 
-      p1.sendMsgToServer({ type: MsgType.NAME, name: "p1" });
-      p2.sendMsgToServer({ type: MsgType.NAME, name: "p2" });
+      p1.sendMsgToServer({ id: MsgType.NAME, name: "p1" });
+      p2.sendMsgToServer({ id: MsgType.NAME, name: "p2" });
 
-      p1.assertMsgForPlayer(2, { type: MsgType.MATCHED, opponentName: "p2" });
-      p2.assertMsgForPlayer(2, { type: MsgType.MATCHED, opponentName: "p1" });
+      p1.assertMsgForPlayer(2, { id: MsgType.MATCHED, opponentName: "p2" });
+      p2.assertMsgForPlayer(2, { id: MsgType.MATCHED, opponentName: "p1" });
 
       assertInstanceOf(g.current(), Counting);
     });
@@ -70,8 +70,8 @@ Deno.test("game", async (t) => {
     env((g: Game) => new Counting(g), (tm, g, p1, p2) => {
       for (let i = 0; i <= 5; i++) {
         tm.tick(1000);
-        p1.assertMsgForPlayer(i, { type: MsgType.COUNTDOWN, value: 5 - i });
-        p2.assertMsgForPlayer(i, { type: MsgType.COUNTDOWN, value: 5 - i });
+        p1.assertMsgForPlayer(i, { id: MsgType.COUNTDOWN, value: 5 - i });
+        p2.assertMsgForPlayer(i, { id: MsgType.COUNTDOWN, value: 5 - i });
       }
 
       assertInstanceOf(g.current(), Gaming);
@@ -82,51 +82,51 @@ Deno.test("game", async (t) => {
     env((g: Game) => new Gaming(g), (tm, g, p1, p2) => {
       tm.tick(300);
       p1.assertMsgForPlayer(0, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: 0,
         theirCount: 0,
       });
       p2.assertMsgForPlayer(0, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: 0,
         theirCount: 0,
       });
 
-      p1.sendMsgToServer({ type: MsgType.CLICK });
+      p1.sendMsgToServer({ id: MsgType.CLICK });
       tm.tick(300);
       p1.assertMsgForPlayer(1, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: 1,
         theirCount: 0,
       });
       p2.assertMsgForPlayer(1, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: 0,
         theirCount: 1,
       });
 
-      p2.sendMsgToServer({ type: MsgType.CLICK });
+      p2.sendMsgToServer({ id: MsgType.CLICK });
       tm.tick(300);
       p1.assertMsgForPlayer(2, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: 1,
         theirCount: 1,
       });
       p2.assertMsgForPlayer(2, {
-        type: MsgType.CLICKCOUNT,
+        id: MsgType.CLICKCOUNT,
         yourCount: 1,
         theirCount: 1,
       });
 
       for (let i = 0; i < 49; i++) {
-        p2.sendMsgToServer({ type: MsgType.CLICK });
+        p2.sendMsgToServer({ id: MsgType.CLICK });
       }
       p1.assertMsgForPlayer(3, {
-        type: MsgType.GAMEOVER,
+        id: MsgType.GAMEOVER,
         won: false,
       });
       p2.assertMsgForPlayer(3, {
-        type: MsgType.GAMEOVER,
+        id: MsgType.GAMEOVER,
         won: true,
       });
 
