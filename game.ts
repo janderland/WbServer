@@ -17,11 +17,23 @@ export interface Websocket {
 
 // Null-object pattern for our Websocket interface.
 class NullWebsocket implements Websocket {
-  send(_msg: string): void {}
+  private listener: (event: { data: string }) => void = () => {};
+
+  send(data: string): void {
+    const msg = Deserialize(data);
+    if (msg.id === MsgType.NAMEPLEASE) {
+      setTimeout(() => {
+        this.listener({ data: Serialize({ id: MsgType.NAME, name: "null" }) });
+      }, 100);
+    }
+  }
+
   addEventListener(
     _type: string,
-    _listener: (event: { data: string }) => void,
-  ): void {}
+    listener: (event: { data: string }) => void,
+  ): void {
+    this.listener = listener;
+  }
 }
 
 // The game is defined as a state machine, each state being a class
