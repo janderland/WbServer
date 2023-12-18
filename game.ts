@@ -24,7 +24,7 @@ class NullWebsocket implements Websocket {
     if (msg.id === MsgType.NAMEPLEASE) {
       setTimeout(() => {
         this.listener({ data: Serialize({ id: MsgType.NAME, name: "null" }) });
-      }, 100);
+      });
     }
   }
 

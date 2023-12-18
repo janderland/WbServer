@@ -1,7 +1,9 @@
 import { Queue } from "./queue.ts";
 import { Game } from "./game.ts";
 
-const queue = new Queue<WebSocket>(true, (player1, player2) => {
+const singlePlayer = true;
+
+const queue = new Queue<WebSocket>(singlePlayer, (player1, player2) => {
   console.log("starting game");
   new Game(player1, player2);
 });
