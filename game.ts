@@ -24,7 +24,8 @@ class NullWebsocket implements Websocket {
     const msg = Deserialize(data);
     if (msg.id === MsgType.NAMEPLEASE) {
       // Schedule a name message to be sent. We cannot call the listener
-      // directly because the Game.state hasn't finished initializing.
+      // directly because the Game.state hasn't finished initializing at
+      // this point.
       setTimeout(() => {
         this.listener({ data: Serialize({ id: MsgType.NAME, name: "null" }) });
       });
