@@ -1,3 +1,4 @@
+import * as log from "https://deno.land/std@0.209.0/log/mod.ts";
 import { Deserialize, Message, MsgType, Serialize } from "./message.ts";
 
 const winCount = 50;
@@ -22,6 +23,8 @@ class NullWebsocket implements Websocket {
   send(data: string): void {
     const msg = Deserialize(data);
     if (msg.id === MsgType.NAMEPLEASE) {
+      // Schedule a name message to be sent. We cannot call the listener
+      // directly because the Game.state hasn't finished initializing.
       setTimeout(() => {
         this.listener({ data: Serialize({ id: MsgType.NAME, name: "null" }) });
       });
@@ -44,11 +47,14 @@ class NullWebsocket implements Websocket {
 export interface State {
   stop(): void;
   update(event: [PlayerID, Message]): State;
+  readonly id: string;
 }
 
 // During the naming state, the game asks each player for their name.
 // When both names are received, the game switches to the counting state.
 export class Naming implements State {
+  readonly id = "naming";
+
   constructor(
     private readonly game: Game,
     private readonly name: [string, string] = ["", ""],
@@ -62,7 +68,7 @@ export class Naming implements State {
   update(event: [PlayerID, Message]): State {
     const [i, msg] = event;
     if (msg.id !== MsgType.NAME) {
-      logIgnoredMsg("naming", event);
+      this.game.ignored(event);
       return this;
     }
 
@@ -88,6 +94,7 @@ export class Naming implements State {
 // after which the game switches to the gaming state.
 export class Counting implements State {
   private readonly intervalID: number;
+  readonly id = "counting";
 
   constructor(
     private readonly game: Game,
@@ -114,7 +121,7 @@ export class Counting implements State {
   }
 
   update(event: [PlayerID, Message]): State {
-    logIgnoredMsg("counting", event);
+    this.game.ignored(event);
     return this;
   }
 }
@@ -125,6 +132,7 @@ export class Counting implements State {
 // game switches to the done state.
 export class Gaming implements State {
   private readonly intervalID: number;
+  readonly id = "gaming";
 
   constructor(
     private readonly game: Game,
@@ -152,7 +160,7 @@ export class Gaming implements State {
   update(event: [PlayerID, Message]): State {
     const [i, msg] = event;
     if (msg.id !== MsgType.CLICK) {
-      logIgnoredMsg("gaming", event);
+      this.game.ignored(event);
       return this;
     }
 
@@ -173,18 +181,23 @@ export class Gaming implements State {
 
 // During the done state, the game ignores any messages received.
 export class Done implements State {
+  readonly id = "done";
+
   constructor(private readonly game: Game) {}
 
   stop(): void {}
 
   update(event: [PlayerID, Message]): State {
-    logIgnoredMsg("done", event);
+    this.game.ignored(event);
     return this;
   }
 }
 
 export class Game {
-  private state: State;
+  private _state: State;
+  get state(): State {
+    return this._state;
+  }
 
   private readonly players: [Websocket, Websocket] = [
     new NullWebsocket(),
@@ -192,9 +205,10 @@ export class Game {
   ];
 
   constructor(
+    readonly id: string,
     p1: Websocket = new NullWebsocket(),
     p2: Websocket = new NullWebsocket(),
-    state: (game: Game) => State = (game) => new Naming(game),
+    init: (game: Game) => State = (game) => new Naming(game),
   ) {
     this.players[0] = p1;
     this.players[1] = p2;
@@ -205,20 +219,13 @@ export class Game {
     // to start a game in any state. Some states send messages
     // during their constructor, so the game must be fully
     // setup before calling the callback.
-    this.state = state(this);
-  }
-
-  current(): State {
-    return this.state;
-  }
-
-  stop() {
-    this.state.stop();
+    this._state = init(this);
   }
 
   send(i: PlayerID, msg: Message) {
-    console.log(`sending message ${i} ${Serialize(msg)}`);
-    this.players[i].send(Serialize(msg));
+    const data = Serialize(msg);
+    log.debug({ id: this.id, i, data, event: "sent" });
+    this.players[i].send(data);
   }
 
   broadcast(msg: Message) {
@@ -227,25 +234,22 @@ export class Game {
     }
   }
 
-  private listener(i: PlayerID) {
-    return (event: { data: string }) => {
-      console.log(`received message ${i} ${event.data}`);
-      const msg = Deserialize(event.data);
-      this.update([i, msg]);
-    };
-  }
-
   update(event: [PlayerID, Message] | State) {
     if (event instanceof Array) {
-      this.state = this.state.update(event);
+      this._state = this._state.update(event);
       return;
     }
-    this.state = event;
+    this._state = event;
   }
-}
 
-function logIgnoredMsg(state: string, event: [PlayerID, Message]) {
-  console.log(
-    `ignoring message ${event[0]} ${Serialize(event[1])} during state ${state}`,
-  );
+  ignored(event: [PlayerID, Message]) {
+    console.log(`${this.id} ignored ${event} during ${this._state.id}`);
+  }
+
+  private listener(i: PlayerID) {
+    return (event: { data: string }) => {
+      log.debug({ id: this.id, i, data: event.data });
+      this.update([i, Deserialize(event.data)]);
+    };
+  }
 }

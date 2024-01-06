@@ -38,12 +38,12 @@ function env(
   const tm = new FakeTime();
   const p1 = new TestPlayer();
   const p2 = new TestPlayer();
-  const g = new Game(p1, p2, init);
+  const g = new Game("", p1, p2, init);
 
   try {
     fn(tm, g, p1, p2);
   } finally {
-    g.stop();
+    g.state.stop();
   }
 }
 
@@ -62,7 +62,7 @@ Deno.test("game", async (t) => {
       p1.assertMsgForPlayer(2, { id: MsgType.MATCHED, opponentName: "p2" });
       p2.assertMsgForPlayer(2, { id: MsgType.MATCHED, opponentName: "p1" });
 
-      assertInstanceOf(g.current(), Counting);
+      assertInstanceOf(g.state, Counting);
     });
   });
 
@@ -74,7 +74,7 @@ Deno.test("game", async (t) => {
         p2.assertMsgForPlayer(i, { id: MsgType.COUNTDOWN, value: 5 - i });
       }
 
-      assertInstanceOf(g.current(), Gaming);
+      assertInstanceOf(g.state, Gaming);
     });
   });
 
@@ -130,7 +130,7 @@ Deno.test("game", async (t) => {
         won: true,
       });
 
-      assertInstanceOf(g.current(), Done);
+      assertInstanceOf(g.state, Done);
     });
   });
 });
