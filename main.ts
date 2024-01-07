@@ -2,7 +2,7 @@ import * as log from "https://deno.land/std@0.209.0/log/mod.ts";
 import { Queue } from "./queue.ts";
 import { Game } from "./game.ts";
 
-const singlePlayer = false;
+const singlePlayer = Deno.env.get("WB_SINGLE_PLAYER") !== undefined;
 let gameID = 0;
 
 const queue = new Queue<WebSocket>(singlePlayer, (player1, player2) => {
