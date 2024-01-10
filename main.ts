@@ -1,4 +1,3 @@
-import * as log from "https://deno.land/std@0.209.0/log/mod.ts";
 import { Queue } from "./queue.ts";
 import { Game } from "./game.ts";
 
@@ -12,7 +11,7 @@ const queue = new Queue<WebSocket>(singlePlayer, (player1, player2) => {
 
 Deno.serve((req) => {
   if (req.headers.get("upgrade") != "websocket") {
-    log.info("rejecting connection");
+    console.log("rejecting connection");
     return new Response(null, { status: 501 });
   }
 
@@ -24,6 +23,6 @@ Deno.serve((req) => {
     queue.enqueue(socket);
   });
 
-  log.info("accepting connection");
+  console.log("accepting connection");
   return response;
 });
