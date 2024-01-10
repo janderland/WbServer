@@ -1,44 +1,10 @@
-import * as log from "https://deno.land/std@0.209.0/log/mod.ts";
 import { Deserialize, Message, MsgType, Serialize } from "./message.ts";
+import { NullWebsocket, Websocket } from "./websocket.ts";
 
 const winCount = 50;
 const countDown = 5;
 
 type PlayerID = 0 | 1;
-
-// Specify the parts of a Deno's Websocket which are actually used.
-// This allows us to easily mock the Websocket during testing.
-export interface Websocket {
-  send(msg: string): void;
-  addEventListener(
-    type: string,
-    listener: (event: { data: string }) => void,
-  ): void;
-}
-
-// Null-object pattern for our Websocket interface.
-class NullWebsocket implements Websocket {
-  private listener: (event: { data: string }) => void = () => {};
-
-  send(data: string): void {
-    const msg = Deserialize(data);
-    if (msg.id === MsgType.NAMEPLEASE) {
-      // Schedule a name message to be sent. We cannot call the listener
-      // directly because the Game.state hasn't finished initializing at
-      // this point.
-      setTimeout(() => {
-        this.listener({ data: Serialize({ id: MsgType.NAME, name: "null" }) });
-      });
-    }
-  }
-
-  addEventListener(
-    _type: string,
-    listener: (event: { data: string }) => void,
-  ): void {
-    this.listener = listener;
-  }
-}
 
 // The game is defined as a state machine, each state being a class
 // implementing this interface. These classes follows RAII principles:
@@ -46,9 +12,9 @@ class NullWebsocket implements Websocket {
 // them. The update function handles any messages received during
 // the state's lifetime.
 export interface State {
+  readonly id: string;
   stop(): void;
   update(event: [PlayerID, Message]): State;
-  readonly id: string;
 }
 
 // During the naming state, the game asks each player for their name.
@@ -60,6 +26,7 @@ export class Naming implements State {
     private readonly game: Game,
     private readonly name: [string, string] = ["", ""],
   ) {
+    console.log({ id: this.game.id, state: this.id });
     this.game.broadcast({ id: MsgType.WINCOUNT, count: winCount });
     this.game.broadcast({ id: MsgType.NAMEPLEASE });
   }
@@ -101,6 +68,8 @@ export class Counting implements State {
     private readonly game: Game,
     private count: number = countDown,
   ) {
+    console.log({ id: this.game.id, state: this.id });
+
     // Start the count down. When we
     // reach 0, switch to State.GAMING.
     this.intervalID = setInterval(() => {
@@ -139,6 +108,8 @@ export class Gaming implements State {
     private readonly game: Game,
     private readonly score: [number, number] = [0, 0],
   ) {
+    console.log({ id: this.game.id, state: this.id });
+
     // Send score to each player every 300ms.
     this.intervalID = setInterval(() => {
       this.game.send(0, {
@@ -184,7 +155,9 @@ export class Gaming implements State {
 export class Done implements State {
   readonly id = "done";
 
-  constructor(private readonly game: Game) {}
+  constructor(private readonly game: Game) {
+    console.log({ id: this.game.id, state: this.id });
+  }
 
   stop(): void {}
 
@@ -225,7 +198,6 @@ export class Game {
 
   send(i: PlayerID, msg: Message) {
     const data = Serialize(msg);
-    log.debug({ id: this.id, i, data, event: "sent" });
     this.players[i].send(data);
   }
 
@@ -244,12 +216,11 @@ export class Game {
   }
 
   ignored(event: [PlayerID, Message]) {
-    console.log(`${this.id} ignored ${event} during ${this._state.id}`);
+    console.log({ id: this.id, state: this.state.id, ignored: event });
   }
 
   private listener(i: PlayerID) {
     return (event: { data: string }) => {
-      log.debug({ id: this.id, i, data: event.data });
       this.update([i, Deserialize(event.data)]);
     };
   }
