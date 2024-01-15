@@ -4,10 +4,11 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
       - name: Test
         uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-        run: "deno test"
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Test
+        run: deno test
