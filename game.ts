@@ -73,7 +73,7 @@ export class Counting implements State {
     ) {
         console.log({id: this.game.id, state: this.id});
 
-        // Start the count down. When we
+        // Start the count-down. When we
         // reach 0, switch to State.GAMING.
         this.intervalID = setInterval(() => {
             this.game.broadcast({
