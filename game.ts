@@ -228,7 +228,7 @@ export class Game {
     }
 
     ignored(event: [PlayerID, Message]) {
-        console.log({id: this.id, state: this.state.id, ignored: event});
+        console.log(`game ID: ${this.id} state: ${this.state.id} ignored event: ${event}`);
     }
 
     private onMessage(i: PlayerID) {
@@ -239,6 +239,7 @@ export class Game {
 
     private onClose(i: PlayerID) {
         return () => {
+            console.log(`game ID: ${this.id} state: ${this.state.id} closed: ${i}`)
             this.update(new Done(this, i ? 0 : 1))
         }
     }
