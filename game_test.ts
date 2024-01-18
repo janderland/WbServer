@@ -21,6 +21,10 @@ class TestPlayer implements Websocket {
     sendCloseToServer() {
         this.addEventListener.calls[1].args[1]()
     }
+
+    sendErrorToServer() {
+        this.addEventListener.calls[2].args[1]()
+    }
 }
 
 // Initializes the game with spying players, runs the
@@ -128,13 +132,13 @@ Deno.test("game", async (t) => {
         });
     });
 
-    await t.step("close", async (t) => {
-        const tests: { name: string; init: (g: Game) => State }[] = [
-            {name: "naming", init: (g: Game) => new Naming(g)},
-            {name: "counting", init: (g: Game) => new Counting(g)},
-            {name: "gaming", init: (g: Game) => new Gaming(g)}
-        ];
+    const tests: { name: string; init: (g: Game) => State }[] = [
+        {name: "naming", init: (g: Game) => new Naming(g)},
+        {name: "counting", init: (g: Game) => new Counting(g)},
+        {name: "gaming", init: (g: Game) => new Gaming(g)}
+    ];
 
+    await t.step("close", async (t) => {
         for (let i = 0; i < tests.length; i++) {
             const test = tests[i]
 
@@ -148,6 +152,26 @@ Deno.test("game", async (t) => {
             await t.step(`p2 while ${test.name}`, () => {
                 env(test.init, (_tm, g, _p1, p2) => {
                     p2.sendCloseToServer()
+                    assertInstanceOf(g.state, Done);
+                });
+            });
+        }
+    });
+
+    await t.step("error", async (t) => {
+        for (let i = 0; i < tests.length; i++) {
+            const test = tests[i]
+
+            await t.step(`p1 while ${test.name}`, () => {
+                env(test.init, (_tm, g, p1, _p2) => {
+                    p1.sendErrorToServer()
+                    assertInstanceOf(g.state, Done);
+                });
+            });
+
+            await t.step(`p2 while ${test.name}`, () => {
+                env(test.init, (_tm, g, _p1, p2) => {
+                    p2.sendErrorToServer()
                     assertInstanceOf(g.state, Done);
                 });
             });

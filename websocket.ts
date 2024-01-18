@@ -3,6 +3,7 @@ import {Deserialize, MsgType, Serialize} from "./message.ts";
 interface WebSocketListenerMap {
     open: () => void;
     close: () => void;
+    error: () => void;
     message: (ev: { data: string }) => void;
 }
 
