@@ -199,6 +199,9 @@ export class Game {
         p1.addEventListener("close", this.onClose(0))
         p2.addEventListener("close", this.onClose(1))
 
+        p1.addEventListener("error", this.onError(0))
+        p2.addEventListener("error", this.onError(1))
+
         // Initializing the state with this callback allows tests
         // to start a game in any state. Some states send messages
         // during their constructor, so the game must be fully
@@ -240,6 +243,13 @@ export class Game {
     private onClose(i: PlayerID) {
         return () => {
             console.log(`game ID: ${this.id} state: ${this.state.id} closed: ${i}`)
+            this.update(new Done(this, i ? 0 : 1))
+        }
+    }
+
+    private onError(i: PlayerID) {
+        return () => {
+            console.log(`game ID: ${this.id} state: ${this.state.id} errored: ${i}`)
             this.update(new Done(this, i ? 0 : 1))
         }
     }
