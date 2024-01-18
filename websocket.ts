@@ -1,20 +1,35 @@
 import {Deserialize, MsgType, Serialize} from "./message.ts";
 
-// Specify the parts of a Deno's Websocket which are actually used.
-// This allows us to easily mock the Websocket during testing.
-export interface Websocket {
-    send(msg: string): void;
+interface WebSocketListenerMap {
+    open: () => void;
+    close: () => void;
+    message: (ev: { data: string }) => void;
+}
 
-    addEventListener(
-        type: string,
-        listener: (event: { data: string }) => void,
+// Specify the subset of the Websocket interface which are actually
+// use. This allows us to easily mock the Websocket during testing.
+export interface Websocket {
+    addEventListener<K extends keyof WebSocketListenerMap>(
+        type: K,
+        listener: WebSocketListenerMap[K],
     ): void;
+
+    send(msg: string): void;
 }
 
 // Null-object pattern for our Websocket interface.
 export class NullWebsocket implements Websocket {
-    private listener: (event: { data: string }) => void = () => {
+    private listener: (ev: { data: string }) => void = () => {
     };
+
+    addEventListener<K extends keyof WebSocketListenerMap>(
+        type: K,
+        listener: WebSocketListenerMap[K],
+    ): void {
+        if (type == "message") {
+            this.listener = (listener as WebSocketListenerMap["message"])
+        }
+    }
 
     send(data: string): void {
         const msg = Deserialize(data);
@@ -26,12 +41,5 @@ export class NullWebsocket implements Websocket {
                 this.listener({data: Serialize({id: MsgType.NAME, name: "null"})});
             });
         }
-    }
-
-    addEventListener(
-        _type: string,
-        listener: (event: { data: string }) => void,
-    ): void {
-        this.listener = listener;
     }
 }

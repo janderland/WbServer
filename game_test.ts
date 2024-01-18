@@ -17,9 +17,13 @@ class TestPlayer implements Websocket {
         const listener = this.addEventListener.calls[0].args[1];
         listener({data: Serialize(msg)});
     }
+
+    sendCloseToServer() {
+        this.addEventListener.calls[1].args[1]()
+    }
 }
 
-// Initilizes the game with spying players, runs the
+// Initializes the game with spying players, runs the
 // given test and ensures the game stops before exiting.
 function env(
     init: (g: Game) => State,
@@ -28,7 +32,7 @@ function env(
     const tm = new FakeTime();
     const p1 = new TestPlayer();
     const p2 = new TestPlayer();
-    const g = new Game("", p1, p2, init);
+    const g = new Game("test", p1, p2, init);
 
     try {
         fn(tm, g, p1, p2);
@@ -122,5 +126,31 @@ Deno.test("game", async (t) => {
 
             assertInstanceOf(g.state, Done);
         });
+    });
+
+    await t.step("close", async (t) => {
+        const tests: { name: string; init: (g: Game) => State }[] = [
+            {name: "naming", init: (g: Game) => new Naming(g)},
+            {name: "counting", init: (g: Game) => new Counting(g)},
+            {name: "gaming", init: (g: Game) => new Gaming(g)}
+        ];
+
+        for (let i = 0; i < tests.length; i++) {
+            const test = tests[i]
+
+            await t.step(`p1 while ${test.name}`, () => {
+                env(test.init, (_tm, g, p1, _p2) => {
+                    p1.sendCloseToServer()
+                    assertInstanceOf(g.state, Done);
+                });
+            });
+
+            await t.step(`p2 while ${test.name}`, () => {
+                env(test.init, (_tm, g, _p1, p2) => {
+                    p2.sendCloseToServer()
+                    assertInstanceOf(g.state, Done);
+                });
+            });
+        }
     });
 });
