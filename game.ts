@@ -7,10 +7,10 @@ const countDown = 5;
 type PlayerID = 0 | 1;
 
 // The game is defined as a state machine, each state being a class
-// implementing this interface. These classes follows RAII principles:
-// the constructor may set up intervals and the stop method clears
-// them. The update function handles any messages received during
-// the state's lifetime.
+// implementing this interface. These classes follow RAII principles:
+// the constructor may set up intervals/timers and the stop method
+// clears them. The update function handles any messages received
+// during the state's lifetime.
 export interface State {
     readonly id: string;
 
@@ -73,7 +73,7 @@ export class Counting implements State {
     ) {
         console.log({id: this.game.id, state: this.id});
 
-        // Start the count down. When we
+        // Start the count-down. When we
         // reach 0, switch to State.GAMING.
         this.intervalID = setInterval(() => {
             this.game.broadcast({
@@ -145,12 +145,7 @@ export class Gaming implements State {
             return this;
         }
 
-        // Stop sending scores and send the game over message.
-        clearInterval(this.intervalID);
-        this.game.send(i, {id: MsgType.GAMEOVER, won: true});
-        this.game.send(i ? 0 : 1, {id: MsgType.GAMEOVER, won: false});
-
-        return new Done(this.game);
+        return new Done(this.game, i);
     }
 }
 
@@ -158,8 +153,15 @@ export class Gaming implements State {
 export class Done implements State {
     readonly id = "done";
 
-    constructor(private readonly game: Game) {
+    constructor(
+        private readonly game: Game,
+        winner: PlayerID,
+    ) {
         console.log({id: this.game.id, state: this.id});
+
+        const loser = winner ? 0 : 1
+        this.game.send(winner, {id: MsgType.GAMEOVER, won: true});
+        this.game.send(loser, {id: MsgType.GAMEOVER, won: false});
     }
 
     stop(): void {
@@ -190,8 +192,12 @@ export class Game {
     ) {
         this.players[0] = p1;
         this.players[1] = p2;
-        p1.addEventListener("message", this.listener(0));
-        p2.addEventListener("message", this.listener(1));
+
+        p1.addEventListener("message", this.onMessage(0));
+        p2.addEventListener("message", this.onMessage(1));
+
+        p1.addEventListener("close", this.onClose(0))
+        p2.addEventListener("close", this.onClose(1))
 
         // Initializing the state with this callback allows tests
         // to start a game in any state. Some states send messages
@@ -216,6 +222,8 @@ export class Game {
             this._state = this._state.update(event);
             return;
         }
+
+        this._state.stop()
         this._state = event;
     }
 
@@ -223,9 +231,15 @@ export class Game {
         console.log({id: this.id, state: this.state.id, ignored: event});
     }
 
-    private listener(i: PlayerID) {
+    private onMessage(i: PlayerID) {
         return (event: { data: string }) => {
             this.update([i, Deserialize(event.data)]);
         };
+    }
+
+    private onClose(i: PlayerID) {
+        return () => {
+            this.update(new Done(this, i ? 0 : 1))
+        }
     }
 }
