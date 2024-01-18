@@ -27,11 +27,12 @@ export class MatchMaker<T> {
         this.startGame(player, newPlayer)
     }
 
-    drop(id: string) {
+    drop(id: string): boolean {
         if (this.id != id) {
-            return
+            return false;
         }
         this.player = undefined
         this.id = ""
+        return true;
     }
 }
