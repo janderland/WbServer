@@ -237,6 +237,7 @@ export class Game {
     private onClose(i: PlayerID) {
         return () => {
             console.log(`game ID: ${this.id} state: ${this.state.id} closed: ${i}`)
+            this.players[i] = new NullWebsocket();
             this.update(new Done(this, i ? 0 : 1))
         }
     }
@@ -244,6 +245,7 @@ export class Game {
     private onError(i: PlayerID) {
         return () => {
             console.log(`game ID: ${this.id} state: ${this.state.id} errored: ${i}`)
+            this.players[i] = new NullWebsocket();
             this.update(new Done(this, i ? 0 : 1))
         }
     }
