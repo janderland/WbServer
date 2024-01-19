@@ -1,7 +1,7 @@
 import {Counting, Done, Game, Gaming, Naming, State,} from "./game.ts";
 import {Websocket} from './websocket.ts';
 import {Message, MsgType, Serialize} from "./message.ts";
-import {assertSpyCall, spy,} from "https://deno.land/std@0.208.0/testing/mock.ts";
+import {assertSpyCall, assertSpyCalls, spy,} from "https://deno.land/std@0.208.0/testing/mock.ts";
 import {FakeTime} from "https://deno.land/std@0.184.0/testing/time.ts";
 import {assertInstanceOf} from "https://deno.land/std@0.208.0/assert/mod.ts";
 
@@ -11,6 +11,10 @@ class TestPlayer implements Websocket {
 
     assertMsgForPlayer(i: number, msg: Message) {
         assertSpyCall(this.send, i, {args: [Serialize(msg)]});
+    }
+
+    assertNoMsgForPlayer() {
+        assertSpyCalls(this.send, 0);
     }
 
     sendMsgToServer(msg: Message) {
@@ -164,14 +168,22 @@ Deno.test("game", async (t) => {
 
             await t.step(`p1 while ${test.name}`, () => {
                 env(test.init, (_tm, g, p1, _p2) => {
+                    // Reset the spy to 0 calls.
+                    p1.send = spy();
+
                     p1.sendErrorToServer()
+                    p1.assertNoMsgForPlayer()
                     assertInstanceOf(g.state, Done);
                 });
             });
 
             await t.step(`p2 while ${test.name}`, () => {
                 env(test.init, (_tm, g, _p1, p2) => {
+                    // Reset the spy to 0 calls.
+                    p2.send = spy();
+
                     p2.sendErrorToServer()
+                    p2.assertNoMsgForPlayer()
                     assertInstanceOf(g.state, Done);
                 });
             });
