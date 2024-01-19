@@ -28,7 +28,6 @@ export class Naming implements State {
         private readonly game: Game,
         private readonly name: [string, string] = ["", ""],
     ) {
-        console.log({id: this.game.id, state: this.id});
         this.game.broadcast({id: MsgType.WINCOUNT, count: winCount});
         this.game.broadcast({id: MsgType.NAMEPLEASE});
     }
@@ -71,8 +70,6 @@ export class Counting implements State {
         private readonly game: Game,
         private count: number = countDown,
     ) {
-        console.log({id: this.game.id, state: this.id});
-
         // Start the count-down. When we
         // reach 0, switch to State.GAMING.
         this.intervalID = setInterval(() => {
@@ -111,8 +108,6 @@ export class Gaming implements State {
         private readonly game: Game,
         private readonly score: [number, number] = [0, 0],
     ) {
-        console.log({id: this.game.id, state: this.id});
-
         // Send score to each player every 300ms.
         this.intervalID = setInterval(() => {
             this.game.send(0, {
@@ -157,8 +152,6 @@ export class Done implements State {
         private readonly game: Game,
         winner: PlayerID,
     ) {
-        console.log({id: this.game.id, state: this.id});
-
         const loser = winner ? 0 : 1
         this.game.send(winner, {id: MsgType.GAMEOVER, won: true});
         this.game.send(loser, {id: MsgType.GAMEOVER, won: false});
@@ -228,6 +221,7 @@ export class Game {
 
         this._state.stop()
         this._state = event;
+        console.log(`game ID: ${this.id} state: ${this.state.id}`);
     }
 
     ignored(event: [PlayerID, Message]) {
