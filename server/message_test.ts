@@ -1,4 +1,4 @@
-import {assertEquals, assertThrows,} from "https://deno.land/std@0.208.0/assert/mod.ts";
+import {assertEquals, assertThrows} from "https://deno.land/std@0.208.0/assert/mod.ts";
 import {Deserialize, Message, MsgType, Serialize} from "./message.ts";
 
 Deno.test("round trip", async (t) => {

@@ -1,4 +1,4 @@
-import {Counting, Done, Game, Gaming, Naming, State,} from "./game.ts";
+import {Counting, Done, Game, Gaming, Naming, State} from "./game.ts";
 import {Websocket} from './websocket.ts';
 import {Message, MsgType, Serialize} from "./message.ts";
 import {assertSpyCall, assertSpyCalls, spy,} from "https://deno.land/std@0.208.0/testing/mock.ts";
