@@ -1,0 +1,68 @@
+@import 'colors.css';
+
+html {
+    font-family: sans-serif;
+}
+
+body {
+    /* Prevent scrolling on desktop browsers. */
+    overflow: hidden;
+    margin: 0;
+}
+
+h1 {
+    font-size: 15vmin;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+h2 {
+    font-size: 10vmin;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+h1, h2 {
+    /* Adding multiple shadows to make 3D text. */
+    text-shadow: 0 1px 0 #ccc,
+    0 2px 0 #c9c9c9,
+    0 3px 0 #bbb,
+    0 4px 0 #b9b9b9,
+    0 5px 0 #aaa,
+    0 6px 1px rgba(0, 0, 0, .1),
+    0 0 5px rgba(0, 0, 0, .1),
+    0 1px 3px rgba(0, 0, 0, .3),
+    0 3px 5px rgba(0, 0, 0, .2),
+    0 5px 10px rgba(0, 0, 0, .25),
+    0 10px 10px rgba(0, 0, 0, .2),
+    0 20px 30px rgba(0, 0, 0, .5);
+}
+
+h3 {
+    font-size: 8vmin;
+    color: var(--secondary);
+
+    /* Adding multiple shadows to make 3D text. */
+    text-shadow: 0 1px 0 #ccc,
+    0 2px 0 #c9c9c9,
+    0 3px 0 #bbb,
+    0 4px 0 #b9b9b9,
+    0 5px 0 #aaa;
+}
+
+button {
+    background-color: var(--primary);
+    padding: 1vmax;
+    color: white;
+}
+
+input {
+    padding: 10px;
+}
+
+button, input {
+    font-size: 6vmin;
+    border: 1px solid black;
+    border-radius: 5px;
+    text-align: center;
+}

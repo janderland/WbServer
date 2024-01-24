@@ -1,0 +1,9 @@
+/*
+CSS is organized using the SMACSS methodology.
+https://smacss.com/
+*/
+
+@import "base.css";
+@import "layout.css";
+@import "modules.css";
+@import "state.css";

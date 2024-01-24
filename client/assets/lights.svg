@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="500" width="500" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <defs>
+  <filter id="filter3896" color-interpolation-filters="sRGB">
+   <feGaussianBlur stdDeviation="19.016363636363639 1.2495454545454545" in="SourceGraphic"/>
+  </filter>
+ </defs>
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="translate(0,-552.36215)">
+  <g stroke-linejoin="miter" stroke-dashoffset="0" filter="url(#filter3896)" stroke="#FFF" stroke-linecap="round" stroke-dasharray="none" stroke-miterlimit="4" stroke-width="19.97632026999999866" fill="none">
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;marker-end:none;color:#000000;marker-start:none;marker-mid:none;" d="m100,600-220,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m450,1000-220,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m120,880,280,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m66,700,150,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m460,750-270,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m120,950-150,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m220,810-180,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m420,820-99,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m410,670-99,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m660,600-220,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m620,950-150,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m350,620-170,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m140,1000-99,0"/>
+   <path opacity="0.75000000000000000" style="enable-background:accumulate;color:#000000;" d="m260,960,69,0"/>
+  </g>
+ </g>
+</svg>

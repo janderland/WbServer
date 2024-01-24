@@ -1,0 +1,198 @@
+@import 'colors.css';
+@import 'state.css';
+
+/* Loading Page */
+
+#loading {
+    background-color: #547aff;
+}
+
+#loadingMessage {
+    text-align: center;
+}
+
+
+/* Main Page */
+
+#title {
+    top: 8vh;
+    text-align: center;
+}
+
+#menuButtons {
+    bottom: 10vh;
+    white-space: nowrap;
+}
+
+#menuToGame {
+    font-size: 10vmin;
+}
+
+#helpModal {
+    width: 80%;
+    max-width: 80vmin;
+    padding: 10px;
+    text-align: center;
+    font-size: 7vmin;
+    background-color: white;
+    box-shadow: inset 0px 0px 20px 1px rgba(0, 0, 0, 0.75);
+    display: none;
+}
+
+#tint {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: none;
+}
+
+
+/* Story Page */
+
+#storyContent {
+    position: relative;
+    width: 80%;
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-shadow: inset 0px 0px 20px 1px rgba(0, 0, 0, 0.75);
+    background-color: white;
+}
+
+#storyTitle {
+    width: 100%;
+    text-align: center;
+    font-size: 10vh;
+    color: var(--primary);
+}
+
+
+/* Game Page */
+
+#naming {
+    text-align: center;
+}
+
+#namingDone {
+    margin-top: 5px;
+}
+
+#counting {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#count {
+    h1 {
+        font-size: 75vmin;
+    }
+}
+
+@keyframes playingBackgroundFrames {
+    0%, 50%, 100% {
+        transform: rotate(90deg) scale(1, 1);
+    }
+    25% {
+        transform: rotate(85deg) scale(1.2, 1.2);
+    }
+    75% {
+        transform: rotate(95deg) scale(1.2, 1.2);
+    }
+}
+
+#playingBackground {
+    position: absolute;
+    /*
+     This height and width provides enough room for #playingBackground
+     to rotate but still completely cover the viewport.
+     */
+    height: 142vmax;
+    width: 142vmax;
+
+    /* Rotate it so the background is scrolling from top to bottom. */
+    transform: rotate(90deg);
+
+    animation-name: playingBackgroundFrames;
+    animation-duration: 5s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+#playing {
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#flash {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: #ffffcc;
+    display: none;
+    opacity: 0.7;
+}
+
+#gameContainer {
+    height: 40vmax;
+    width: 40vmax;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+#smashed {
+    display: none;
+}
+
+#theirHand {
+    height: 15vmax;
+    max-width: 100%;
+    max-height: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 25%;
+}
+
+#theirSmasher {
+    display: none;
+}
+
+#yourHand {
+    height: 20vmax;
+    max-width: 100%;
+    max-height: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+#yourSmasher {
+    display: none;
+}
+
+#clickCover {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#gameOverBanner {
+    text-align: center;
+    width: 100%;
+    background-color: #fff;
+    display: none;
+
+    h1 {
+        margin: 0;
+    }
+}
+
+#playAgain {
+    top: 110%;
+    font-size: 5vmin;
+}
