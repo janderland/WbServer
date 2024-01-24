@@ -1,0 +1,146 @@
+.centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.centeredX {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.centeredY {
+    position: absolute;
+    top: 50%;
+    transform: translate(0, -50%);
+}
+
+.back {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 1px;
+    font-size: 5vmin;
+}
+
+.page {
+    width: 80vw;
+    height: 100vh;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    display: none;
+}
+
+.banana {
+    @include centered;
+    height: 40vmax;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+
+/* Scrolling Backgrounds */
+
+/*
+    Div used to display background moving across the screen.
+    An animated background isn't used because browsers currently
+    don't GPU optimize such animations.
+ */
+
+@keyframes scrollingFrames {
+    /* Move 500px because that's the size of the repeating backgrounds */
+    0% {
+        transform: translate(-500px, 0);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+.scrolling {
+    position: absolute;
+
+    /* Width is twice the size of the repeating background. */
+    width: 200%;
+    min-width: 1000px;
+    height: 100%;
+
+    background-size: 500px 500px;
+    background-position: 0px 0px;
+    background-repeat: repeat;
+}
+
+.clouds {
+    background-color: #547aff;
+    background-image: url('../assets/clouds.svg');
+    animation: scrollingFrames 10s linear infinite;
+}
+
+.lights {
+    background-color: #547aff;
+    background-image: url('../assets/lights.svg');
+    animation: scrollingFrames 1s linear infinite;
+}
+
+.playingNames {
+    bottom: 0;
+    width: 70%;
+}
+
+.name {
+    position: absolute;
+    bottom: 0;
+    width: 40%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* So that the text-shadow doesn't get cut off */
+    padding-bottom: 5px;
+
+    &.yourName {
+        left: 0;
+        text-align: left;
+
+        /* Resize the layout for smaller screens */
+        @media (max-width: 600px) {
+            left: 8vmin;
+            bottom: 10vmin;
+            width: 100%;
+        }
+    }
+
+    &.theirName {
+        right: 0;
+        text-align: right;
+
+        /* Resize the layout for smaller screens */
+        @media (max-width: 600px) {
+            left: 8vmin;
+            text-align: left;
+            width: 100%;
+        }
+    }
+}
+
+.vs {
+    bottom: 5px;
+    height: 8vmin;
+    width: 8vmin;
+    color: white;
+    font-size: 6vmin;
+    background-color: #CC99FF;
+    border: 1px white;
+    border-radius: 4vmin;
+    text-align: center;
+
+    /* Resize the layout for smaller screens */
+    @media (max-width: 600px) {
+        left: 0;
+        transform: none;
+        bottom: 5vmin;
+    }
+}

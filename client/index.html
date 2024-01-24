@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Wish Banana</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <link rel="stylesheet" type="text/css" href="css/wishbanana.css">
+    <script src="js/wishbanana.js"></script>
+</head>
+<body>
+<div id="loading" class="page">
+    <div id="loadingMessage" class="centered">
+        <h2>loading</h2>
+    </div>
+</div>
+<div id="menu" class="page">
+    <div class="scrolling clouds"></div>
+
+    <img src="assets/banana.svg" class="banana centered">
+    <div id="title" class="centeredX"><h1>wish banana</h1></div>
+    <div id="menuButtons" class="centeredX">
+        <button id="menuToStory">story</button>
+        <button id="menuToGame">play</button>
+        <button id="openHelp">help</button>
+    </div>
+
+    <div id="tint"></div>
+    <div id="helpModal" class="centered">
+        tap fast to win
+    </div>
+</div>
+<div id="story" class="page">
+    <div class="scrolling clouds"></div>
+
+    <div id="storyContent">
+        <div id="storyTitle"><h2>story</h2></div>
+
+        <button id="storyToMenu" class="back">back</button>
+
+        <p>It was noon-thirty on a beautiful Tuesday. The banana-colored sunlight spilled across the peaceful cul-de-sac
+        of Via Del Campo Ct. Without warning, a determined fist belonging to none other than Joyce "Mother Effin'"
+        Kuo arced down toward James Whiteside's flash frozen snack cake.</p>
+
+        <p>"Wait!" shouted James, with unbridled fear and emotion. He snatched the vacuum packed morsel from the table
+        and clutched it to his heart. "I want to eat this," he said.</p>
+
+        <p>With a sigh, Joyce checked her swing at the last second. "What would happen," she pondered, "if two people
+        were to smash each end of a snack cake at the same time?"</p>
+
+        <p>Tim Sun (no relation to the star Earth orbits) gave one last look of loathing at his yogurt/vegetable Jacuzzi
+        and offered his banana as a sacrifice. He handed it to Canadian mystic Victor Pak, who enchanted the doomed
+        fruit:</p>
+
+        <p>"By the power vested in me by the Royal Canadian Mounties, the great moose spirit, and those mean-ass Canada
+        geese, I hereby pronounce this fruit 'wish banana'."</p>
+
+        <p>All was silent, save for the echoes of Victor's rumbling voice off the cafeteria tables. Joyce, who was
+        clearly feeling aggressive, sat on one side of the very nervous fruit. Donna Lou, data rights champion, sat
+        on the other. By this time, a sizable crowd had gathered.</p>
+
+        <p>"ONE!" they shouted.</p>
+
+        <p>"TWO!" Donna and Joyce swung their fists into the air.</p>
+
+        <p>"THREE!" cried the masses. The brave women smashed their balled hands into the fruit.</p>
+
+        <p>I wish I could tell you everyone survived. I wish I could tell you the peaceful cul-de-sac of Via del Campo
+        Ct wasn't a vast crater. So I will.</p>
+
+        <p>After everyone nursed their banana-related injuries, Jon Anderson decided to make a game based on their
+        experience that day. This is that game. Please play with reckless abandon, in honor of those six brave souls
+        who got super sticky on that fateful day.</p>
+    </div>
+</div>
+<div id="game" class="page">
+    <div class="scrolling clouds"></div>
+
+    <div class="state centered" id="naming">
+        <input id="name" type="text" placeholder="enter name"/>
+        <br>
+        <button id="namingDone">done</button>
+    </div>
+
+    <div class="state centered" id="matching"><h2></h2></div>
+
+    <div class="state" id="counting">
+        <div id="count" class="centered"><h1></h1></div>
+        <div class="playingNames centeredX">
+            <div class="name yourName h3"></div>
+            <div class="name theirName h3"></div>
+            <div class="vs centeredX">vs</div>
+        </div>
+    </div>
+
+    <div class="state" id="playing">
+        <div id="playingBackground">
+            <div class="scrolling lights"></div>
+        </div>
+        <div id="flash"></div>
+        <div id="gameContainer" class="centered">
+            <img src="assets/theirHand.svg" id="theirHand" class="fist"/>
+
+            <img src="assets/banana.svg" id="unsmashed" class="banana centered"/>
+
+            <img src="assets/theirSmash.svg" id="theirSmasher" class="banana centered"/>
+            <img src="assets/splat.svg" id="smashed" class="banana centered"/>
+            <img src="assets/yourSmash.svg" id="yourSmasher" class="banana centered"/>
+
+            <img src="assets/yourHand.svg" id="yourHand" class="fist"/>
+        </div>
+        <div class="playingNames centeredX">
+            <div class="name yourName"><h3>Jonathan</h3></div>
+            <div class="name theirName"><h3>Christopher</h3></div>
+            <div class="vs centeredX">vs</div>
+        </div>
+
+        <div id="clickCover"></div>
+        <div id="gameOverBanner" class="centeredY">
+            <div id="youWin"><h1>winner</h1></div>
+            <div id="youLose"><h1>loser</h1></div>
+            <button id="playAgain" class="centeredX">again</button>
+        </div>
+    </div>
+
+    <button id="gameToMenu" class="back">quit</button>
+</div>
+</body>
+</html>
